@@ -2,8 +2,8 @@
 
 import { submitMessage } from "@/lib/actions"
 import type { ChatSession } from "@/lib/types"
-import { useEffect, useRef } from "react"
-import { useFormState, useFormStatus } from "react-dom"
+import { useEffect, useRef, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import {
   Select,
   SelectContent,
@@ -40,7 +40,7 @@ export function ChatInterface({
   const formRef = useRef<HTMLFormElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const [state, formAction] = useFormState(submitMessage, {
+  const [state, formAction] = useActionState(submitMessage, {
     messages: session?.messages ?? [],
     headline: session?.headline,
   })
