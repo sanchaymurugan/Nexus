@@ -27,7 +27,7 @@ type ChatInterfaceProps = {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" size="icon" disabled={pending}>
+    <Button type="submit" size="lg" disabled={pending}>
       {pending ? <Loader2 className="animate-spin" /> : <ArrowUp />}
       <span className="sr-only">Send message</span>
     </Button>
@@ -75,10 +75,10 @@ export function ChatInterface({
   if (!session) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center">
-        <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-4">
-          <Bot className="h-24 w-24" />
-          <h2 className="text-2xl font-semibold">Start a new chat</h2>
-          <p>Select a chat from the sidebar or start a new one to begin.</p>
+        <div className="flex h-full flex-col items-center justify-center gap-6 text-center text-muted-foreground p-4">
+          <Bot className="h-28 w-28" />
+          <h2 className="text-3xl font-semibold">Start a new chat</h2>
+          <p className="text-lg">Select a chat from the sidebar or start a new one to begin.</p>
         </div>
       </div>
     )
@@ -86,11 +86,11 @@ export function ChatInterface({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b p-4">
-        <h2 className="text-xl font-semibold truncate pr-4">{session.headline}</h2>
+      <header className="flex items-center justify-between border-b p-6">
+        <h2 className="text-2xl font-semibold truncate pr-4">{session.headline}</h2>
         <Select defaultValue="pro">
-          <SelectTrigger className="w-auto sm:w-[180px] flex-shrink-0">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          <SelectTrigger className="w-auto sm:w-[200px] flex-shrink-0 text-base py-5">
+            <Sparkles className="h-5 w-5 text-muted-foreground" />
             <SelectValue placeholder="Select a mode" />
           </SelectTrigger>
           <SelectContent>
@@ -102,7 +102,7 @@ export function ChatInterface({
       </header>
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <AnimatePresence>
-            <motion.div className="p-4 sm:p-6 space-y-6">
+            <motion.div className="p-6 sm:p-8 space-y-8">
             {state.messages.map((message, index) => (
                 <motion.div
                 key={message.id}
@@ -117,7 +117,7 @@ export function ChatInterface({
             </motion.div>
         </AnimatePresence>
       </ScrollArea>
-      <div className="border-t bg-background/80 p-4 backdrop-blur-sm">
+      <div className="border-t bg-background/80 p-6 backdrop-blur-sm">
         <form
           ref={formRef}
           action={(formData) => {
@@ -131,7 +131,7 @@ export function ChatInterface({
           <Textarea
             name="message"
             placeholder="Ask Nexus anything..."
-            className="pr-28 pl-24 min-h-[48px] resize-none"
+            className="pr-32 pl-28 min-h-[56px] text-lg resize-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
@@ -139,15 +139,15 @@ export function ChatInterface({
               }
             }}
           />
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex gap-0.5">
-            <Button type="button" variant="ghost" size="icon" aria-label="Attach file">
-              <Paperclip />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex gap-1">
+            <Button type="button" variant="ghost" size="icon" className="w-10 h-10" aria-label="Attach file">
+              <Paperclip className="w-6 h-6" />
             </Button>
-            <Button type="button" variant="ghost" size="icon" aria-label="Use voice">
-              <Mic />
+            <Button type="button" variant="ghost" size="icon" className="w-10 h-10" aria-label="Use voice">
+              <Mic className="w-6 h-6" />
             </Button>
           </div>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <SubmitButton />
           </div>
         </form>

@@ -17,13 +17,13 @@ export function ChatMessage({ message }: { message: Message }) {
     >
       <Avatar
         className={cn(
-          "h-8 w-8 border shrink-0",
+          "h-10 w-10 border shrink-0",
           isAssistant ? "bg-primary text-primary-foreground" : "bg-background"
         )}
       >
         {isAssistant ? (
           <AvatarFallback>
-            <Bot className="h-5 w-5" />
+            <Bot className="h-6 w-6" />
           </AvatarFallback>
         ) : (
           <>
@@ -31,20 +31,20 @@ export function ChatMessage({ message }: { message: Message }) {
               <AvatarImage
                 src={userAvatar.imageUrl}
                 alt={userAvatar.description}
-                width={32}
-                height={32}
+                width={40}
+                height={40}
                 data-ai-hint={userAvatar.imageHint}
               />
             )}
             <AvatarFallback>
-              <User className="h-5 w-5" />
+              <User className="h-6 w-6" />
             </AvatarFallback>
           </>
         )}
       </Avatar>
       <div
         className={cn(
-          "max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap",
+          "max-w-[85%] rounded-lg p-4 text-base whitespace-pre-wrap",
           isAssistant
             ? "bg-card text-card-foreground"
             : "bg-primary text-primary-foreground"

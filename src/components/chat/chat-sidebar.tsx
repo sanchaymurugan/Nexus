@@ -62,13 +62,16 @@ export function ChatSidebar({
   return (
     <Sidebar>
       <SidebarHeader className="flex items-center justify-between">
-        <Logo className="hidden group-data-[state=collapsed]:block" showName={false} />
+        <div className="flex items-center gap-2">
+            <SidebarTrigger className="md:hidden" />
+            <Logo className="hidden group-data-[state=collapsed]:block" showName={false} />
+        </div>
         <Button
             variant="outline"
             className="h-10 w-full justify-start px-3 group-data-[state=collapsed]:hidden"
             onClick={onNewChat}
         >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-5 w-5" />
             New Chat
         </Button>
         <SidebarTrigger className="hidden md:flex" />
@@ -92,13 +95,13 @@ export function ChatSidebar({
                             autoFocus
                             value={editingHeadline} 
                             onChange={(e) => setEditingHeadline(e.target.value)}
-                            className="h-7"
+                            className="h-8 text-base"
                         />
-                        <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 shrink-0">
-                            <Check />
+                        <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                            <Check className="w-5 h-5" />
                         </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={(e) => handleCancelEdit(e, session.id)}>
-                            <X />
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => handleCancelEdit(e, session.id)}>
+                            <X className="w-5 h-5" />
                         </Button>
                      </form>
                   ) : (
@@ -106,7 +109,7 @@ export function ChatSidebar({
                       <SidebarMenuButton
                         onClick={() => onSessionSelect(session.id)}
                         isActive={session.id === activeSessionId}
-                        className="w-full justify-start gap-2 pr-[56px]"
+                        className="w-full justify-start gap-3 pr-[56px]"
                         tooltip={session.headline}
                       >
                         <MessageSquareText className="shrink-0" />
@@ -119,7 +122,7 @@ export function ChatSidebar({
                             aria-label="Edit headline"
                             className="relative"
                          >
-                            <Pencil />
+                            <Pencil className="w-5 h-5" />
                         </SidebarMenuAction>
                         <SidebarMenuAction
                           onClick={(e) => {
@@ -130,7 +133,7 @@ export function ChatSidebar({
                           aria-label="Delete chat"
                           className="relative"
                         >
-                          <Trash2 />
+                          <Trash2 className="w-5 h-5" />
                         </SidebarMenuAction>
                       </div>
                     </>
@@ -141,8 +144,8 @@ export function ChatSidebar({
           </AnimatePresence>
           {sessions.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-4 text-center text-muted-foreground p-8">
-              <Bot className="h-12 w-12" />
-              <p className="text-sm">
+              <Bot className="h-16 w-16" />
+              <p className="text-base">
                 No chats yet. Start a new conversation to see it here.
               </p>
             </div>
