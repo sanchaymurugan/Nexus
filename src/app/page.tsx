@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import type { ChatSession } from '@/lib/types'
 import {
   SidebarProvider,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatInterface } from '@/components/chat/chat-interface'
@@ -73,9 +74,14 @@ export default function Home() {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full flex-col">
-        <header className="flex h-16 items-center justify-center border-b px-4 text-center">
-             <Logo />
-             <p className="ml-4 text-sm text-muted-foreground">Your unified AI assistant</p>
+        <header className="flex h-20 items-center justify-center border-b px-4 text-center shrink-0">
+             <div className="absolute left-4">
+                <SidebarTrigger className="md:hidden" />
+             </div>
+             <div className="flex flex-col items-center">
+                <Logo />
+                <p className="text-sm text-muted-foreground mt-1">Your unified AI assistant</p>
+             </div>
         </header>
         <div className="flex flex-1 overflow-hidden">
           <ChatSidebar
