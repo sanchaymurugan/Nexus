@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Nexus AI Proxy application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Session": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Session",
+      "type": "object",
+      "description": "Represents a user session within the Nexus AI Proxy application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the session entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Session)"
+        },
+        "loginTime": {
+          "type": "string",
+          "description": "The date and time the user logged in.",
+          "format": "date-time"
+        },
+        "logoutTime": {
+          "type": "string",
+          "description": "The date and time the user logged out. Null if the session is still active.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "loginTime"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. The 'userId' is derived from Firebase Authentication. This enforces path-based ownership for user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, obtained from Firebase Authentication."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/sessions/{sessionId}",
+        "definition": {
+          "entityName": "Session",
+          "schema": {
+            "$ref": "#/backend/entities/Session"
+          },
+          "description": "Stores session data for each user. Enforces path-based ownership. Includes `userId` to ensure each session belongs to the correct user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, obtained from Firebase Authentication."
+            },
+            {
+              "name": "sessionId",
+              "description": "The unique identifier for the session."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore data structure is designed to support a secure and scalable login system for the Nexus AI Proxy application. It leverages path-based ownership for user data and sessions, ensuring authorization independence and facilitating straightforward security rules. The structure prioritizes clarity and debuggability, aligning with the core design principles.\n\nThe `/users/{userId}` collection stores user profiles, with `userId` derived from Firebase Authentication. The `/users/{userId}/sessions/{sessionId}` subcollection stores session data for each user, leveraging path-based ownership to directly associate sessions with their respective users. This eliminates the need for `get()` calls to determine user ownership, improving security and performance.\n\nThe structure adheres to structural segregation, as all documents within a collection share the same security requirements. This makes it easier to implement and maintain robust security rules.  QAPs (Rules are not Filters) are supported because list operations can be securely performed based on the path-based ownership."
+  }
+}
