@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Nexus AI Proxy',
+  title: 'Nexus',
   description: 'A unified chat interface to interact with various services and execute tasks.',
 };
 

@@ -25,7 +25,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Icon className="h-6 w-6" />
-      <h1 className="text-lg font-semibold text-foreground">Nexus AI Proxy</h1>
+      <h1 className="text-lg font-semibold text-foreground">Nexus</h1>
     </div>
   )
 }
