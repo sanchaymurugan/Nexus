@@ -74,15 +74,16 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-full flex-col">
+      <div className="flex h-screen flex-col">
         <header className="flex h-14 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2 md:w-1/3">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
           </div>
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex flex-col items-center justify-center text-center">
              <Logo />
+             <p className="text-xs text-muted-foreground">Your unified AI assistant</p>
           </div>
-          <div className="w-8 md:w-1/3" />
+          <div className="w-8" />
         </header>
         <div className="flex flex-1 overflow-hidden">
           <ChatSidebar
