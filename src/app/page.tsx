@@ -76,8 +76,8 @@ export default function Home() {
     <SidebarProvider>
       <div className="flex h-full flex-col">
         <header className="flex h-14 items-center justify-between border-b px-4">
-          <SidebarTrigger className="md:hidden" />
-          <div className="flex-1 flex justify-center">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="md:hidden" />
             <Logo />
           </div>
           <div className="w-8 md:hidden" />

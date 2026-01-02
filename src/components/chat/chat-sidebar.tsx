@@ -10,11 +10,13 @@ import {
   SidebarMenuButton,
   SidebarMenuAction,
   SidebarInput,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
 import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { Logo } from "@/app/logo"
 
 type ChatSidebarProps = {
   sessions: ChatSession[]
@@ -59,15 +61,17 @@ export function ChatSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="flex items-center justify-between">
+        <Logo className="hidden group-data-[state=collapsed]:block" />
         <Button
             variant="outline"
-            className="h-10 w-full justify-start px-3"
+            className="h-10 w-full justify-start px-3 group-data-[state=collapsed]:hidden"
             onClick={onNewChat}
         >
             <Plus className="mr-2 h-4 w-4" />
             New Chat
         </Button>
+        <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
