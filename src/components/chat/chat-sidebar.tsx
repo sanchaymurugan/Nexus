@@ -77,7 +77,7 @@ export function ChatSidebar({
         <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
+        <SidebarMenu className={sessions.length === 0 ? "h-full" : ""}>
           <AnimatePresence initial={false}>
             {sessions.map((session) => (
               <motion.div
@@ -143,7 +143,7 @@ export function ChatSidebar({
             ))}
           </AnimatePresence>
           {sessions.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-4 text-center text-muted-foreground p-8">
+            <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-8">
               <Bot className="h-16 w-16" />
               <p className="text-base">
                 No chats yet. Start a new conversation to see it here.
