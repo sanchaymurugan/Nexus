@@ -9,14 +9,7 @@ import {
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatInterface } from '@/components/chat/chat-interface'
 import { Logo } from './logo'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Sparkles } from 'lucide-react'
+import { AuthGuard } from './auth-guard'
 
 const initialSessions: ChatSession[] = [
   {
@@ -37,7 +30,7 @@ const initialSessions: ChatSession[] = [
   },
 ];
 
-export default function Home() {
+function AppPage() {
   const [sessions, setSessions] = useState<ChatSession[]>(initialSessions)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(
     initialSessions[0]?.id ?? null
@@ -103,4 +96,12 @@ export default function Home() {
       </div>
     </SidebarProvider>
   )
+}
+
+export default function Home() {
+    return (
+        <AuthGuard>
+            <AppPage />
+        </AuthGuard>
+    )
 }

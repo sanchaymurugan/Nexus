@@ -11,12 +11,15 @@ import {
   SidebarMenuAction,
   SidebarInput,
   SidebarTrigger,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
-import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X } from "lucide-react"
+import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Logo } from "@/app/logo"
+import { useFirebase } from "@/firebase"
+import { signOut } from "firebase/auth"
 
 type ChatSidebarProps = {
   sessions: ChatSession[]
@@ -37,6 +40,7 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingHeadline, setEditingHeadline] = useState('')
+  const { auth } = useFirebase();
 
   const handleEditClick = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation()
@@ -58,6 +62,10 @@ export function ChatSidebar({
     e.stopPropagation();
     setEditingSessionId(null);
   }
+  
+  const handleLogout = () => {
+    signOut(auth);
+  };
 
   return (
     <Sidebar>
@@ -152,6 +160,16 @@ export function ChatSidebar({
           )}
         </SidebarMenu>
       </SidebarContent>
+       <SidebarFooter>
+        <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                    <LogOut />
+                    <span>Logout</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
