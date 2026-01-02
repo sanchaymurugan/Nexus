@@ -17,6 +17,8 @@ import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
 import { useFormStatus } from "react-dom"
+import { Logo } from "@/app/logo"
+import { SidebarTrigger } from "../ui/sidebar"
 
 type ChatInterfaceProps = {
   session: ChatSession | null
@@ -73,10 +75,13 @@ export function ChatInterface({
 
   if (!session) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-4">
-        <Bot className="h-24 w-24" />
-        <h2 className="text-2xl font-semibold">Start a new chat</h2>
-        <p>Select a chat from the sidebar or start a new one to begin.</p>
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center">
+        <Logo className="mb-4" />
+        <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-4">
+          <Bot className="h-24 w-24" />
+          <h2 className="text-2xl font-semibold">Start a new chat</h2>
+          <p>Select a chat from the sidebar or start a new one to begin.</p>
+        </div>
       </div>
     )
   }
@@ -84,7 +89,13 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b p-4">
-        <h2 className="text-xl font-semibold truncate pr-4">{session.headline}</h2>
+        <div className="flex items-center gap-2">
+            <SidebarTrigger className="md:hidden" />
+            <h2 className="text-xl font-semibold truncate pr-4">{session.headline}</h2>
+        </div>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Logo className="hidden md:flex" />
+        </div>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[180px] flex-shrink-0">
             <Sparkles className="h-4 w-4 text-muted-foreground" />

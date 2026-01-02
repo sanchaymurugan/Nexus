@@ -9,7 +9,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuAction,
-  SidebarTrigger,
   SidebarInput,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
@@ -62,10 +61,7 @@ export function ChatSidebar({
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex w-full items-center justify-between">
-          <Logo />
-          <SidebarTrigger />
-        </div>
+        <Logo />
       </SidebarHeader>
       <SidebarContent>
         <Button
