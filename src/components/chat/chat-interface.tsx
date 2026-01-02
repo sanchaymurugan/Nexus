@@ -3,7 +3,6 @@
 import { submitMessage } from "@/lib/actions"
 import type { ChatSession } from "@/lib/types"
 import { useEffect, useRef, useActionState } from "react"
-import { useFormStatus } from "react-dom"
 import {
   Select,
   SelectContent,
@@ -17,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
+import { useFormStatus } from "react-dom"
 
 type ChatInterfaceProps = {
   session: ChatSession | null

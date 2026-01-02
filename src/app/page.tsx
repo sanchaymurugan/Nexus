@@ -50,6 +50,16 @@ export default function Home() {
     )
   }, []);
 
+  const handleSessionDelete = useCallback((sessionId: string) => {
+    setSessions((prev) => {
+      const remainingSessions = prev.filter((s) => s.id !== sessionId);
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(remainingSessions[0]?.id ?? null);
+      }
+      return remainingSessions;
+    });
+  }, [activeSessionId]);
+
   const activeSession = sessions.find((s) => s.id === activeSessionId)
 
   return (
@@ -59,6 +69,7 @@ export default function Home() {
         activeSessionId={activeSessionId}
         onSessionSelect={setActiveSessionId}
         onNewChat={handleNewChat}
+        onSessionDelete={handleSessionDelete}
       />
       <SidebarInset>
         <ChatInterface

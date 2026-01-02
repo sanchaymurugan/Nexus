@@ -9,9 +9,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarMenuAction,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
-import { Bot, MessageSquareText, Plus } from "lucide-react"
+import { Bot, MessageSquareText, Plus, Trash2 } from "lucide-react"
 import { Logo } from "@/app/logo"
 
 type ChatSidebarProps = {
@@ -19,6 +20,7 @@ type ChatSidebarProps = {
   activeSessionId: string | null
   onSessionSelect: (id: string) => void
   onNewChat: () => void
+  onSessionDelete: (id: string) => void
 }
 
 export function ChatSidebar({
@@ -26,6 +28,7 @@ export function ChatSidebar({
   activeSessionId,
   onSessionSelect,
   onNewChat,
+  onSessionDelete,
 }: ChatSidebarProps) {
   return (
     <Sidebar>
@@ -56,6 +59,16 @@ export function ChatSidebar({
                 <MessageSquareText className="shrink-0"/>
                 <span className="truncate">{session.headline}</span>
               </SidebarMenuButton>
+              <SidebarMenuAction
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSessionDelete(session.id);
+                }}
+                showOnHover
+                aria-label="Delete chat"
+              >
+                <Trash2 />
+              </SidebarMenuAction>
             </SidebarMenuItem>
           ))}
           {sessions.length === 0 && (
