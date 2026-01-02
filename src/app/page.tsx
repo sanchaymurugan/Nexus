@@ -70,6 +70,7 @@ export default function Home() {
         onSessionSelect={setActiveSessionId}
         onNewChat={handleNewChat}
         onSessionDelete={handleSessionDelete}
+        onSessionUpdate={handleSessionUpdate}
       />
       <SidebarInset>
         <ChatInterface
