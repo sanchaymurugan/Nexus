@@ -94,13 +94,13 @@ export default function Home() {
             onSessionDelete={handleSessionDelete}
             onSessionUpdate={handleSessionUpdate}
           />
-          <SidebarInset>
+          <main className="flex-1 flex flex-col">
             <ChatInterface
               key={activeSessionId}
               session={activeSession ?? null}
               onSessionUpdate={handleSessionUpdate}
             />
-          </SidebarInset>
+          </main>
         </div>
       </div>
     </SidebarProvider>
