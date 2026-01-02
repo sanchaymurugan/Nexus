@@ -76,11 +76,13 @@ export default function Home() {
     <SidebarProvider>
       <div className="flex h-full flex-col">
         <header className="flex h-14 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:w-1/3">
             <SidebarTrigger className="md:hidden" />
-            <Logo />
           </div>
-          <div className="w-8 md:hidden" />
+          <div className="flex items-center justify-center flex-1">
+             <Logo />
+          </div>
+          <div className="w-8 md:w-1/3" />
         </header>
         <div className="flex flex-1 overflow-hidden">
           <ChatSidebar

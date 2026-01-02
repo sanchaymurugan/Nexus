@@ -62,7 +62,7 @@ export function ChatSidebar({
   return (
     <Sidebar>
       <SidebarHeader className="flex items-center justify-between">
-        <Logo className="hidden group-data-[state=collapsed]:block" />
+        <Logo className="hidden group-data-[state=collapsed]:block" showName={false} />
         <Button
             variant="outline"
             className="h-10 w-full justify-start px-3 group-data-[state=collapsed]:hidden"

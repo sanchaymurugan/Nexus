@@ -3,6 +3,7 @@
 import { submitMessage } from "@/lib/actions"
 import type { ChatSession } from "@/lib/types"
 import { useEffect, useRef, useActionState } from "react"
+import { useFormStatus } from "react-dom"
 import {
   Select,
   SelectContent,
@@ -16,7 +17,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
-import { useFormStatus } from "react-dom"
 import { Logo } from "@/app/logo"
 
 type ChatInterfaceProps = {
@@ -75,7 +75,6 @@ export function ChatInterface({
   if (!session) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center">
-        <Logo className="mb-4" />
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-4">
           <Bot className="h-24 w-24" />
           <h2 className="text-2xl font-semibold">Start a new chat</h2>

@@ -21,11 +21,11 @@ const Icon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, showName = true }: { className?: string, showName?: boolean }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Icon className="h-6 w-6" />
-      <h1 className="text-lg font-semibold text-foreground">Nexus</h1>
+      {showName && <h1 className="text-lg font-semibold text-foreground">Nexus</h1>}
     </div>
   )
 }
