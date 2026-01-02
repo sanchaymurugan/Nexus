@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
 import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X } from "lucide-react"
-import { Logo } from "@/app/logo"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 
@@ -61,18 +60,17 @@ export function ChatSidebar({
   return (
     <Sidebar>
       <SidebarHeader>
-        <Logo />
+        <Button
+            variant="outline"
+            className="h-10 w-full justify-start px-3"
+            onClick={onNewChat}
+        >
+            <Plus className="mr-2 h-4 w-4" />
+            New Chat
+        </Button>
       </SidebarHeader>
       <SidebarContent>
-        <Button
-          variant="outline"
-          className="h-10 w-full justify-start px-3"
-          onClick={onNewChat}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Chat
-        </Button>
-        <SidebarMenu className="mt-4">
+        <SidebarMenu>
           <AnimatePresence initial={false}>
             {sessions.map((session) => (
               <motion.div

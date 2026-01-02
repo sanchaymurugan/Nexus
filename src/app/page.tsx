@@ -5,9 +5,19 @@ import type { ChatSession } from '@/lib/types'
 import {
   SidebarProvider,
   SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatInterface } from '@/components/chat/chat-interface'
+import { Logo } from './logo'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Sparkles } from 'lucide-react'
 
 const initialSessions: ChatSession[] = [
   {
@@ -64,21 +74,32 @@ export default function Home() {
 
   return (
     <SidebarProvider>
-      <ChatSidebar
-        sessions={sessions}
-        activeSessionId={activeSessionId}
-        onSessionSelect={setActiveSessionId}
-        onNewChat={handleNewChat}
-        onSessionDelete={handleSessionDelete}
-        onSessionUpdate={handleSessionUpdate}
-      />
-      <SidebarInset>
-        <ChatInterface
-          key={activeSessionId}
-          session={activeSession ?? null}
-          onSessionUpdate={handleSessionUpdate}
-        />
-      </SidebarInset>
+      <div className="flex h-full flex-col">
+        <header className="flex h-14 items-center justify-between border-b px-4">
+          <SidebarTrigger className="md:hidden" />
+          <div className="flex-1 flex justify-center">
+            <Logo />
+          </div>
+          <div className="w-8 md:hidden" />
+        </header>
+        <div className="flex flex-1 overflow-hidden">
+          <ChatSidebar
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSessionSelect={setActiveSessionId}
+            onNewChat={handleNewChat}
+            onSessionDelete={handleSessionDelete}
+            onSessionUpdate={handleSessionUpdate}
+          />
+          <SidebarInset>
+            <ChatInterface
+              key={activeSessionId}
+              session={activeSession ?? null}
+              onSessionUpdate={handleSessionUpdate}
+            />
+          </SidebarInset>
+        </div>
+      </div>
     </SidebarProvider>
   )
 }

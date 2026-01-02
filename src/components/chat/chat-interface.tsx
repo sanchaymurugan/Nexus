@@ -18,7 +18,6 @@ import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
 import { useFormStatus } from "react-dom"
 import { Logo } from "@/app/logo"
-import { SidebarTrigger } from "../ui/sidebar"
 
 type ChatInterfaceProps = {
   session: ChatSession | null
@@ -89,13 +88,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b p-4">
-        <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
-            <h2 className="text-xl font-semibold truncate pr-4">{session.headline}</h2>
-        </div>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Logo className="hidden md:flex" />
-        </div>
+        <h2 className="text-xl font-semibold truncate pr-4">{session.headline}</h2>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[180px] flex-shrink-0">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
