@@ -25,14 +25,14 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Invalid email address.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
   phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address.' }),
-  password: z.string().min(1, { message: 'Password cannot be empty.'}),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(1, { message: 'Password is required.'}),
 });
 
 type SignUpFormValue = z.infer<typeof signUpSchema>;
@@ -80,7 +80,7 @@ export default function LoginPage() {
   const handleSignUp = async (data: SignUpFormValue) => {
     setLoading(true);
     try {
-      await initiateEmailSignUp(auth, data.email, data.password, data.name);
+      await initiateEmailSignUp(auth, data.email, data.password, data.name, data.phoneNumber);
       toast({
         title: 'Sign Up Successful',
         description: 'Please log in with your new credentials.',
@@ -117,7 +117,14 @@ export default function LoginPage() {
     }
      // A timeout can provide feedback on failure if no redirect happens.
     setTimeout(() => {
-        setLoading(false);
+        if (!auth.currentUser) {
+            setLoading(false);
+             toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: 'Incorrect email or password. Please try again.',
+            });
+        }
     }, 5000);
   };
 

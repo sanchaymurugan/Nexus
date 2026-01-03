@@ -7,6 +7,8 @@ import {
   updateProfile,
   // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { getSdks } from '.';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -16,14 +18,23 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, name: string): Promise<void> {
+export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, name: string, phoneNumber: string): Promise<void> {
+  const { firestore } = getSdks();
   const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
   
   // Update the user's profile with their name
   if (userCredential.user) {
-    await updateProfile(userCredential.user, {
+    const user = userCredential.user;
+    await updateProfile(user, {
       displayName: name,
     });
+    const userRef = doc(firestore, 'users', user.uid);
+    await setDoc(userRef, {
+      id: user.uid,
+      name: name,
+      email: user.email,
+      phoneNumber: phoneNumber,
+    }, { merge: true });
   }
 
   // After creation, sign the user out to force a manual login.

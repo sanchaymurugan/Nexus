@@ -15,7 +15,7 @@ import {
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
-import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut, User as UserIcon } from "lucide-react"
+import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut, User as UserIcon, Settings } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Logo } from "@/app/logo"
@@ -24,6 +24,8 @@ import { signOut } from "firebase/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { PlaceHolderImages } from "@/lib/placeholder-images"
 import { Separator } from "@/components/ui/separator"
+import Link from 'next/link'
+
 
 type ChatSidebarProps = {
   sessions: ChatSession[]
@@ -81,7 +83,6 @@ export function ChatSidebar({
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
-            <Logo className="hidden group-data-[state=collapsed]:block" showName={false} />
         </div>
         <Button
             variant="outline"
@@ -202,6 +203,14 @@ export function ChatSidebar({
         <Separator className="my-1" />
         <SidebarMenu>
             <SidebarMenuItem>
+                <Link href="/profile" passHref>
+                    <SidebarMenuButton tooltip="Profile">
+                        <UserIcon />
+                        <span>Profile</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
                     <LogOut />
                     <span>Logout</span>
