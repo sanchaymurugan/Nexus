@@ -139,11 +139,11 @@ export default function LoginPage() {
   return (
     <div className="container relative flex h-screen flex-col items-center justify-center">
        <Image
-          src="https://picsum.photos/seed/loginpage2/1920/1080"
-          alt="A different abstract background"
+          src="https://picsum.photos/seed/loginpage3/1920/1080"
+          alt="An abstract image representing artificial intelligence and people"
           fill
           className="object-cover"
-          data-ai-hint="abstract architecture"
+          data-ai-hint="artificial intelligence people"
         />
       <div className="relative z-10 mx-auto flex w-full flex-col justify-center space-y-6 rounded-lg bg-background/80 p-8 shadow-lg backdrop-blur-sm sm:w-[400px]">
         <div className="flex flex-col space-y-2 text-center">
