@@ -1,6 +1,5 @@
-
 'use client';
-import { Firestore, collection, addDoc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { Firestore, collection, writeBatch, serverTimestamp, doc } from "firebase/firestore";
 
 const sampleConversations = [
   {
@@ -41,20 +40,27 @@ export async function seedSampleData(firestore: Firestore, userId: string) {
   const batch = writeBatch(firestore);
 
   for (const convo of sampleConversations) {
-    const sessionRef = collection(firestore, `users/${userId}/sessions`);
-    const newSessionDoc = await addDoc(sessionRef, {
+    // Create a new document reference for the session *first*.
+    const sessionRef = doc(collection(firestore, `users/${userId}/sessions`));
+    
+    // Set the session data in the batch.
+    batch.set(sessionRef, {
         userId: userId,
         headline: convo.headline,
         updatedAt: serverTimestamp(),
         isSample: true,
     });
     
-    const messagesCol = collection(firestore, `users/${userId}/sessions/${newSessionDoc.id}/messages`);
+    // Add all messages for that session to the batch.
     for (const msg of convo.messages) {
-       const newMsgRef = await addDoc(messagesCol, {
+       const messageRef = doc(collection(firestore, `users/${userId}/sessions/${sessionRef.id}/messages`));
+       batch.set(messageRef, {
            ...msg,
            createdAt: serverTimestamp()
        });
     }
   }
+  
+  // Commit the batch once for all operations.
+  await batch.commit();
 }

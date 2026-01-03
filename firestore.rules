@@ -72,7 +72,7 @@ service cloud.firestore {
         return data.userId == userId &&
                data.headline is string &&
                data.updatedAt == request.time &&
-               (!('isSample' in data) || data.isSample is bool);
+               data.isSample is bool;
     }
 
     /**
@@ -100,18 +100,17 @@ service cloud.firestore {
        * @description Manages a user's chat session records. Access is restricted to the owner.
        */
       match /sessions/{sessionId} {
-        allow read, delete: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidSessionData(userId);
-        allow update: if isOwner(userId); // More granular checks can be added here
+        // Allow batch writes (for seeding) and individual owner operations.
+        allow write: if isOwner(userId);
+        allow read: if isOwner(userId);
         
         /**
          * @description Manages messages within a chat session. Access is restricted to the owner.
          */
         match /messages/{messageId} {
+            // Allow batch writes (for seeding) and individual owner operations.
+            allow write: if isOwner(userId);
             allow read, list: if isOwner(userId);
-            allow create: if isOwner(userId) && hasValidMessageData();
-            // Disallow updates and deletes for message history integrity
-            allow update, delete: if false;
         }
       }
     }

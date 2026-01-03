@@ -11,8 +11,9 @@ import { ChatInterface } from '@/components/chat/chat-interface'
 import { Logo } from './logo'
 import { AuthGuard } from './auth-guard'
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase'
-import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query, getDocs, where } from 'firebase/firestore'
 import { continueConversation } from '@/lib/actions'
+import { seedSampleData } from '@/firebase/seed-data'
 
 function AppPage() {
   const { user } = useUser();
@@ -22,7 +23,7 @@ function AppPage() {
     () => user ? query(collection(firestore, `users/${user.uid}/sessions`), orderBy('updatedAt', 'desc')) : null,
     [firestore, user]
   );
-  const { data: sessions, isLoading: sessionsLoading } = useCollection<ChatSession>(sessionsQuery);
+  const { data: sessions, isLoading: sessionsLoading, error } = useCollection<ChatSession>(sessionsQuery);
 
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
 
@@ -39,6 +40,25 @@ function AppPage() {
     }
     return null;
   }, [sessions, activeSessionId]);
+  
+  // Effect to check and seed sample data for existing users
+  useEffect(() => {
+    const checkAndSeed = async () => {
+        if (user && firestore) {
+            const sessionsCollection = collection(firestore, `users/${user.uid}/sessions`);
+            const q = query(sessionsCollection, where("isSample", "==", true));
+            const querySnapshot = await getDocs(q);
+
+            // If no sample sessions exist, seed them.
+            if (querySnapshot.empty) {
+                console.log("No sample sessions found, seeding data...");
+                await seedSampleData(firestore, user.uid);
+            }
+        }
+    };
+    checkAndSeed();
+  }, [user, firestore]);
+
 
   // Effect to set the active session ID when sessions load or change
   useEffect(() => {
@@ -57,6 +77,7 @@ function AppPage() {
       headline: 'New Chat',
       updatedAt: serverTimestamp(),
       userId: user.uid,
+      isSample: false, // Explicitly mark non-sample chats
     }
     const sessionsCollection = collection(firestore, `users/${user.uid}/sessions`);
     const newDocRef = await addDoc(sessionsCollection, newSessionData);
