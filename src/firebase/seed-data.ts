@@ -13,7 +13,7 @@ const sampleConversations = [
       { role: "assistant", content: "Perfect. I found a Delta flight departing SFO at 8:30 AM next Friday and returning from JFK at 7:00 PM on Sunday. The total price is $350. Would you like me to go ahead and book it?" },
       { role: "user", content: "Yes, that sounds great. Please book it for me." },
       { role: "assistant", content: "Your flight to NYC has been booked successfully! Your confirmation number is DLF456. You'll receive a confirmation email shortly with all the details. Is there anything else?" },
-      { role: "user", content: "No, that's all. Thank you for your help, Nexus!" },
+      { role: "user", content: "No, that's all. Thank you for your service, Nexus!" },
     ],
   },
   {
@@ -27,7 +27,7 @@ const sampleConversations = [
       { role: "assistant", content: "Your spending is up by about 10% compared to the previous month, mainly due to an increase in the 'Dining Out' category." },
       { role: "user", content: "Okay, I need to watch that. Can you set a budget reminder if my 'Dining Out' spending goes over $150 this month?" },
       { role: "assistant", content: "Budget reminder set. I'll notify you if your 'Dining Out' expenses exceed $150 this month. Can I help with anything else?" },
-      { role: "user", content: "That's it for now. Thank you, Nexus!" },
+      { role: "user", content: "That's it for now. Thank you for your service, Nexus!" },
     ],
   },
   {
@@ -57,7 +57,7 @@ const sampleConversations = [
         { role: "assistant", content: "To confirm: you want to pay $258.50 to your Visa card (4321) from your primary checking account. Is that correct?" },
         { role: "user", content: "Yes, that is correct." },
         { role: "assistant", content: "Payment submitted. Your confirmation number is 789XYZ. The payment will reflect on your account within 1-2 business days." },
-        { role: "user", content: "Awesome, thank you Nexus!" }
+        { role: "user", content: "Awesome, thank you for your service, Nexus!" }
     ]
   }
 ];
