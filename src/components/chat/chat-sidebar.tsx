@@ -80,7 +80,7 @@ export function ChatSidebar({
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="bg-background/50 backdrop-blur-sm md:bg-sidebar md:backdrop-blur-none">
       <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />

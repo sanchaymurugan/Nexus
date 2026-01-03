@@ -123,7 +123,7 @@ export function ChatInterface({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b p-6">
+      <header className="flex items-center justify-between border-b border-background/20 p-6">
         <h2 className="text-2xl font-semibold truncate pr-4">{headline}</h2>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[200px] flex-shrink-0 text-base py-5">
@@ -159,7 +159,7 @@ export function ChatInterface({
             </motion.div>
         </AnimatePresence>
       </ScrollArea>
-      <div className="border-t bg-background/80 p-6 backdrop-blur-sm">
+      <div className="border-t border-background/20 bg-background/50 p-6 backdrop-blur-sm">
         <form
           ref={formRef}
           onSubmit={handleFormSubmit}

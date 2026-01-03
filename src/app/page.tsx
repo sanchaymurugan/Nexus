@@ -14,6 +14,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query, getDocs, where } from 'firebase/firestore'
 import { continueConversation } from '@/lib/actions'
 import { seedSampleData } from '@/firebase/seed-data'
+import Image from 'next/image'
 
 function AppPage() {
   const { user } = useUser();
@@ -152,34 +153,43 @@ function AppPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full flex-col">
-        <header className="flex h-20 shrink-0 items-center justify-center border-b px-4 text-center">
-             <div className="absolute left-4">
-                <SidebarTrigger className="md:hidden" />
-             </div>
-             <div className="flex flex-col items-center">
-                <Logo />
-                <p className="mt-1 text-sm text-muted-foreground">Your unified AI assistant</p>
-             </div>
-        </header>
-        <div className="flex flex-1 overflow-hidden">
-          <ChatSidebar
-            sessions={sessions ?? []}
-            activeSessionId={activeSession?.id ?? null}
-            onSessionSelect={setActiveSessionId}
-            onNewChat={handleNewChat}
-            onSessionDelete={handleSessionDelete}
-            onSessionUpdate={handleSessionUpdate}
-            isLoading={sessionsLoading}
-          />
-          <main className="flex flex-1 flex-col">
-            <ChatInterface
-              key={activeSession?.id}
-              sessionId={activeSession?.id ?? null}
-              headline={activeSession?.headline ?? null}
-              onSubmit={handleMessageSubmit}
+      <div className="relative flex h-screen w-full flex-col">
+        <Image
+          src="https://picsum.photos/seed/homepage5/1920/1080"
+          alt="An abstract image representing the relationship between artificial intelligence and people"
+          fill
+          className="object-cover"
+          data-ai-hint="artificial intelligence relationship"
+        />
+        <div className="relative z-10 flex h-full w-full flex-col">
+          <header className="flex h-20 shrink-0 items-center justify-center border-b border-background/20 bg-background/50 px-4 text-center backdrop-blur-sm">
+              <div className="absolute left-4">
+                  <SidebarTrigger className="md:hidden" />
+              </div>
+              <div className="flex flex-col items-center">
+                  <Logo />
+                  <p className="mt-1 text-sm text-muted-foreground">Your unified AI assistant</p>
+              </div>
+          </header>
+          <div className="flex flex-1 overflow-hidden">
+            <ChatSidebar
+              sessions={sessions ?? []}
+              activeSessionId={activeSession?.id ?? null}
+              onSessionSelect={setActiveSessionId}
+              onNewChat={handleNewChat}
+              onSessionDelete={handleSessionDelete}
+              onSessionUpdate={handleSessionUpdate}
+              isLoading={sessionsLoading}
             />
-          </main>
+            <main className="flex flex-1 flex-col bg-background/50 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none">
+              <ChatInterface
+                key={activeSession?.id}
+                sessionId={activeSession?.id ?? null}
+                headline={activeSession?.headline ?? null}
+                onSubmit={handleMessageSubmit}
+              />
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
