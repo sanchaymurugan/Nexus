@@ -57,7 +57,7 @@ const sampleConversations = [
         { role: "assistant", content: "To confirm: you want to pay $258.50 to your Visa card (4321) from your primary checking account. Is that correct?" },
         { role: "user", content: "Yes, that is correct." },
         { role: "assistant", content: "Payment submitted. Your confirmation number is 789XYZ. The payment will reflect on your account within 1-2 business days." },
-        { role: "user", content: "Awesome, thank you for your service, Nexus!" }
+        { role: "user", content: "Awesome. Thank you for your service, Nexus!" }
     ]
   }
 ];
