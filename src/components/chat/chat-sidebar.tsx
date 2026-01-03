@@ -15,12 +15,15 @@ import {
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
-import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut } from "lucide-react"
+import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut, User as UserIcon } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Logo } from "@/app/logo"
-import { useFirebase } from "@/firebase"
+import { useFirebase, useUser } from "@/firebase"
 import { signOut } from "firebase/auth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PlaceHolderImages } from "@/lib/placeholder-images"
+import { Separator } from "@/components/ui/separator"
 
 type ChatSidebarProps = {
   sessions: ChatSession[]
@@ -31,6 +34,8 @@ type ChatSidebarProps = {
   onSessionUpdate: (session: Partial<ChatSession> & { id: string }) => Promise<void>;
   isLoading: boolean;
 }
+
+const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
 
 export function ChatSidebar({
   sessions,
@@ -44,6 +49,7 @@ export function ChatSidebar({
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingHeadline, setEditingHeadline] = useState('')
   const { auth } = useFirebase();
+  const { user } = useUser();
 
   const handleEditClick = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation()
@@ -173,6 +179,27 @@ export function ChatSidebar({
         </SidebarMenu>
       </SidebarContent>
        <SidebarFooter>
+        <div className="flex items-center gap-3 p-2 group-data-[state=collapsed]:hidden">
+          <Avatar className="h-10 w-10 border">
+             {userAvatar && (
+              <AvatarImage
+                src={user?.photoURL || userAvatar.imageUrl}
+                alt={user?.displayName || "User"}
+                width={40}
+                height={40}
+                data-ai-hint={userAvatar.imageHint}
+              />
+            )}
+            <AvatarFallback>
+              <UserIcon className="h-6 w-6" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-sm font-semibold truncate">{user?.displayName ?? "User"}</span>
+            <span className="text-xs text-muted-foreground truncate">{user?.email ?? ""}</span>
+          </div>
+        </div>
+        <Separator className="my-1" />
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
