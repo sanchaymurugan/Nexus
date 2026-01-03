@@ -192,7 +192,7 @@ export function ChatInterface({
             </Button>
           </div>
         </form>
-        <p className="text-xs text-center text-muted-foreground mt-3">
+        <p className="text-xs text-center text-primary-foreground mt-3">
             Nexus can make mistakes. Please double-check the information.
         </p>
       </div>
