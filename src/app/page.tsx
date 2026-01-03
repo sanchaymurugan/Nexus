@@ -13,6 +13,7 @@ import { AuthGuard } from './auth-guard'
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase'
 import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query } from 'firebase/firestore'
 import { type ChatState } from '@/lib/actions'
+import { getFirebaseAdmin } from '@/firebase/admin'
 
 function AppPage() {
   const { user } = useUser();
@@ -52,6 +53,7 @@ function AppPage() {
 
   const handleNewChat = useCallback(async () => {
     if (!user) return;
+
     const newSessionData = {
       headline: 'New Chat',
       updatedAt: serverTimestamp(),
@@ -59,6 +61,15 @@ function AppPage() {
     }
     const sessionsCollection = collection(firestore, `users/${user.uid}/sessions`);
     const newDocRef = await addDoc(sessionsCollection, newSessionData);
+
+    const welcomeMessage = {
+        role: 'assistant',
+        content: 'Hi! I am Nexus, your unified AI assistant. How can I help you today?',
+        createdAt: serverTimestamp(),
+    };
+    const messagesCollection = collection(firestore, `users/${user.uid}/sessions/${newDocRef.id}/messages`);
+    await addDoc(messagesCollection, welcomeMessage);
+
     setActiveSessionId(newDocRef.id)
   }, [user, firestore])
 
