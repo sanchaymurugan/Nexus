@@ -3,7 +3,7 @@ import { Firestore, collection, writeBatch, serverTimestamp, doc } from "firebas
 
 const sampleConversations = [
   {
-    headline: "Flight to NYC",
+    headline: "Flight to New York",
     messages: [
       { role: "user", content: "Hi Nexus, I need to book a round-trip flight to New York City." },
       { role: "assistant", content: "Of course! To find the best options, could you please tell me your departure city and your desired travel dates?" },
