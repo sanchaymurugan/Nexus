@@ -9,6 +9,8 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getSdks } from '.';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -29,12 +31,24 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
       displayName: name,
     });
     const userRef = doc(firestore, 'users', user.uid);
-    await setDoc(userRef, {
+    const userData = {
       id: user.uid,
       name: name,
       email: user.email,
       phoneNumber: phoneNumber,
-    }, { merge: true });
+    };
+    // Use non-blocking set with catch for error handling
+    setDoc(userRef, userData, { merge: true })
+        .catch(error => {
+            errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                    path: userRef.path,
+                    operation: 'create', 
+                    requestResourceData: userData,
+                })
+            )
+        });
   }
 
   // After creation, sign the user out to force a manual login.
