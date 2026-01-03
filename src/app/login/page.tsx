@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,8 +20,8 @@ import { Logo } from '@/app/logo';
 import { useToast } from '@/hooks/use-toast';
 import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useAuth, useUser } from '@/firebase';
-import { useEffect } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -138,7 +138,14 @@ export default function LoginPage() {
 
   return (
     <div className="container relative flex h-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
+       <Image
+          src="https://picsum.photos/seed/loginpage/1920/1080"
+          alt="Abstract background"
+          fill
+          className="object-cover"
+          data-ai-hint="abstract background"
+        />
+      <div className="relative z-10 mx-auto flex w-full flex-col justify-center space-y-6 rounded-lg bg-background/80 p-8 shadow-lg backdrop-blur-sm sm:w-[400px]">
         <div className="flex flex-col space-y-2 text-center">
           <Logo className="mx-auto" />
           <h1 className="text-2xl font-semibold tracking-tight">
