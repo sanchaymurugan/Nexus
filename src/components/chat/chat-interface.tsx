@@ -1,9 +1,7 @@
 'use client'
 
-import { submitMessage, type ChatState } from "@/lib/actions"
 import type { Message } from "@/lib/types"
-import { useEffect, useRef, useActionState, useState } from "react"
-import { useFormStatus } from "react-dom"
+import { useEffect, useRef, useState } from "react"
 import {
   Select,
   SelectContent,
@@ -14,53 +12,48 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles } from "lucide-react"
+import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles, User } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase"
 import { collection, orderBy, query } from "firebase/firestore"
 
 type ChatInterfaceProps = {
-  chatState: ChatState | null
-}
-
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button type="submit" size="lg" disabled={pending}>
-      {pending ? <Loader2 className="animate-spin" /> : <ArrowUp />}
-      <span className="sr-only">Send message</span>
-    </Button>
-  )
+  sessionId: string | null
+  headline: string | null
+  onSubmit: (message: string, currentMessages: Message[]) => Promise<void>
 }
 
 export function ChatInterface({
-  chatState,
+  sessionId,
+  headline,
+  onSubmit,
 }: ChatInterfaceProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { user } = useUser();
   const firestore = useFirestore();
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!user || !chatState?.sessionId) return null;
+    if (!user || !sessionId) return null;
     return query(
-      collection(firestore, `users/${user.uid}/sessions/${chatState.sessionId}/messages`),
+      collection(firestore, `users/${user.uid}/sessions/${sessionId}/messages`),
       orderBy('createdAt', 'asc')
     );
-  }, [firestore, user, chatState?.sessionId]);
+  }, [firestore, user, sessionId]);
 
   const { data: messages, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
 
-  const [state, formAction] = useActionState(submitMessage, chatState as ChatState)
-  
   const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
 
 
   useEffect(() => {
     if (messages) {
       setOptimisticMessages(messages);
+    } else {
+      setOptimisticMessages([]);
     }
   }, [messages]);
 
@@ -71,26 +64,52 @@ export function ChatInterface({
           scrollableView.scrollTop = scrollableView.scrollHeight;
       }
     }
-  }, [optimisticMessages.length])
-  
-  const handleFormAction = (formData: FormData) => {
+  }, [optimisticMessages, isSubmitting])
+
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const userMessageContent = formData.get('message') as string;
     if (!userMessageContent?.trim()) return;
 
-    const optimisticMessage: Message = {
+    formRef.current?.reset();
+    setIsSubmitting(true);
+
+    const optimisticUserMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
       content: userMessageContent,
       createdAt: new Date()
     };
-    setOptimisticMessages(prev => [...prev, optimisticMessage]);
+    
+    const optimisticAssistantMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: '...', // Placeholder content
+      createdAt: new Date(Date.now() + 1),
+    };
+    
+    // Use the callback version of setOptimisticMessages to get the most recent state
+    let messageHistoryForServer: Message[] = [];
+    setOptimisticMessages(prev => {
+        messageHistoryForServer = [...prev, optimisticUserMessage];
+        return [...messageHistoryForServer, optimisticAssistantMessage];
+    });
 
-    formAction(formData);
-    formRef.current?.reset();
+
+    try {
+        await onSubmit(userMessageContent, messageHistoryForServer);
+    } catch (error) {
+        console.error("Failed to submit message:", error);
+        // Optionally revert optimistic updates or show an error message
+        setOptimisticMessages(prev => prev.filter(m => m.id !== optimisticUserMessage.id && m.id !== optimisticAssistantMessage.id));
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
 
-  if (!chatState) {
+  if (!sessionId) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center">
         <div className="flex h-full flex-col items-center justify-center gap-6 text-center text-muted-foreground p-4">
@@ -105,7 +124,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b p-6">
-        <h2 className="text-2xl font-semibold truncate pr-4">{state.headline}</h2>
+        <h2 className="text-2xl font-semibold truncate pr-4">{headline}</h2>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[200px] flex-shrink-0 text-base py-5">
             <Sparkles className="h-5 w-5 text-muted-foreground" />
@@ -134,7 +153,7 @@ export function ChatInterface({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                <ChatMessage message={message} />
+                <ChatMessage message={message} isPending={isSubmitting && index === optimisticMessages.length - 1} />
                 </motion.div>
             ))}
             </motion.div>
@@ -143,13 +162,14 @@ export function ChatInterface({
       <div className="border-t bg-background/80 p-6 backdrop-blur-sm">
         <form
           ref={formRef}
-          action={handleFormAction}
+          onSubmit={handleFormSubmit}
           className="relative"
         >
           <Textarea
             name="message"
             placeholder="Ask Nexus anything..."
             className="pr-32 pl-28 min-h-[56px] text-lg resize-none"
+            disabled={isSubmitting}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
@@ -166,7 +186,10 @@ export function ChatInterface({
             </Button>
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <SubmitButton />
+            <Button type="submit" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="animate-spin" /> : <ArrowUp />}
+              <span className="sr-only">Send message</span>
+            </Button>
           </div>
         </form>
       </div>

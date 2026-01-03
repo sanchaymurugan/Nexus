@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import type { ChatSession } from '@/lib/types'
+import type { ChatSession, Message } from '@/lib/types'
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -12,8 +12,7 @@ import { Logo } from './logo'
 import { AuthGuard } from './auth-guard'
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase'
 import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query } from 'firebase/firestore'
-import { type ChatState } from '@/lib/actions'
-import { getFirebaseAdmin } from '@/firebase/admin'
+import { continueConversation } from '@/lib/actions'
 
 function AppPage() {
   const { user } = useUser();
@@ -45,10 +44,10 @@ function AppPage() {
   useEffect(() => {
     if (activeSession) {
       setActiveSessionId(activeSession.id);
-    } else {
+    } else if (!sessionsLoading && sessions?.length === 0) {
       setActiveSessionId(null);
     }
-  }, [activeSession]);
+  }, [activeSession, sessions, sessionsLoading]);
 
 
   const handleNewChat = useCallback(async () => {
@@ -93,17 +92,42 @@ function AppPage() {
       setActiveSessionId(remainingSessions[0]?.id ?? null);
     }
   }, [user, firestore, activeSessionId, sessions]);
+  
+  const handleMessageSubmit = useCallback(async (userMessageContent: string, currentMessages: Message[]) => {
+      if (!user || !activeSessionId) return;
 
+      const userMessage: Omit<Message, 'id'> = {
+          role: 'user',
+          content: userMessageContent,
+          createdAt: serverTimestamp(),
+      };
+      
+      const messagesCollection = collection(firestore, `users/${user.uid}/sessions/${activeSessionId}/messages`);
+      const userMessageRef = await addDoc(messagesCollection, userMessage);
+      
+      const fullMessageHistory = [...currentMessages, { ...userMessage, id: userMessageRef.id, createdAt: new Date() }];
 
-  const chatState: ChatState | null = useMemo(() => {
-    if (!activeSession || !user) return null;
-    return {
-      sessionId: activeSession.id,
-      userId: user.uid,
-      headline: activeSession.headline,
-      messages: [], // messages are now fetched inside the server action
-    }
-  }, [activeSession, user])
+      const serverResponse = await continueConversation(user.uid, activeSessionId, fullMessageHistory);
+
+      if (serverResponse) {
+        const assistantMessage: Omit<Message, 'id'> = {
+          role: 'assistant',
+          content: serverResponse.aiMessage,
+          createdAt: serverTimestamp(),
+        };
+        await addDoc(messagesCollection, assistantMessage);
+        
+        if (serverResponse.headline) {
+            handleSessionUpdate({ id: activeSessionId, headline: serverResponse.headline });
+        } else {
+            // Just update the timestamp
+            const sessionRef = doc(firestore, `users/${user.uid}/sessions`, activeSessionId);
+            await setDoc(sessionRef, { updatedAt: serverTimestamp() }, { merge: true });
+        }
+      }
+
+  }, [user, firestore, activeSessionId, handleSessionUpdate]);
+
 
   return (
     <SidebarProvider>
@@ -130,7 +154,9 @@ function AppPage() {
           <main className="flex flex-1 flex-col">
             <ChatInterface
               key={activeSession?.id}
-              chatState={chatState}
+              sessionId={activeSession?.id ?? null}
+              headline={activeSession?.headline ?? null}
+              onSubmit={handleMessageSubmit}
             />
           </main>
         </div>
