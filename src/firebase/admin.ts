@@ -1,24 +1,16 @@
-import { initializeApp, getApps, App, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { firebaseConfig } from './config';
 
 let app: App;
 
+// When running in a Google Cloud environment, initializeApp() with no arguments
+// will automatically use Application Default Credentials.
 if (!getApps().length) {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-     app = initializeApp({
-      credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)),
-    });
-  } else {
-    app = initializeApp({
-        projectId: firebaseConfig.projectId
-    });
-  }
+  app = initializeApp();
 } else {
   app = getApps()[0];
 }
-
 
 const firestore = getFirestore(app);
 const auth = getAuth(app);
