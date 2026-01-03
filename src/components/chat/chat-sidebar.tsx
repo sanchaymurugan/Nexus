@@ -15,10 +15,9 @@ import {
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
-import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut, User as UserIcon, Settings } from "lucide-react"
+import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut, User as UserIcon } from "lucide-react"
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Logo } from "@/app/logo"
 import { useFirebase, useUser } from "@/firebase"
 import { signOut } from "firebase/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -75,7 +74,9 @@ export function ChatSidebar({
   }
   
   const handleLogout = () => {
-    signOut(auth);
+    if (auth) {
+      signOut(auth);
+    }
   };
 
   return (
@@ -170,7 +171,7 @@ export function ChatSidebar({
           )}
 
           {sessions.length === 0 && !isLoading && (
-            <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-8">
+            <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center text-muted-foreground">
               <Bot className="h-16 w-16" />
               <p className="text-base">
                 No chats yet. Start a new conversation to see it here.
@@ -202,14 +203,6 @@ export function ChatSidebar({
         </div>
         <Separator className="my-1" />
         <SidebarMenu>
-            <SidebarMenuItem>
-                <Link href="/profile" passHref>
-                    <SidebarMenuButton tooltip="Profile">
-                        <UserIcon />
-                        <span>Profile</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
              <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
                     <LogOut />
