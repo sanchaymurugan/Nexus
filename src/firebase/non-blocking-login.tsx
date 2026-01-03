@@ -4,6 +4,7 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
   // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
 
@@ -15,11 +16,22 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 }
 
 /** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+export async function initiateEmailSignUp(authInstance: Auth, email: string, password: string, name: string): Promise<void> {
+  const userCredential = await createUserWithEmailAndPassword(authInstance, email, password);
+  
+  // Update the user's profile with their name
+  if (userCredential.user) {
+    await updateProfile(userCredential.user, {
+      displayName: name,
+    });
+  }
+
+  // After creation, sign the user out to force a manual login.
+  if (authInstance.currentUser) {
+    await authInstance.signOut();
+  }
 }
+
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {

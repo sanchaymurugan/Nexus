@@ -71,16 +71,22 @@ service cloud.firestore {
      * ensuring the document's internal ID matches the authenticated user's ID.
      */
     function hasValidUserDataForCreate(userId) {
-      return request.resource.data.id == userId;
+      let incomingData = request.resource.data;
+      return incomingData.id == userId &&
+             incomingData.name is string && incomingData.name.size() > 0 &&
+             incomingData.email == request.auth.token.email;
     }
 
     /**
      * Validates User data on update.
-     * Enforces immutability of the 'id' field to prevent re-assigning the
+     * Enforces immutability of the 'id' and 'email' fields to prevent re-assigning the
      * document to a different user.
      */
     function hasValidUserDataForUpdate() {
-      return request.resource.data.id == resource.data.id;
+      let incomingData = request.resource.data;
+      let existingData = resource.data;
+      return incomingData.id == existingData.id &&
+             incomingData.email == existingData.email;
     }
 
     /**

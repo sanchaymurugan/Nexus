@@ -23,23 +23,42 @@ import { useAuth, useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
-const formSchema = z.object({
+const signUpSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Invalid email address.' }),
+  phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-type UserFormValue = z.infer<typeof formSchema>;
+const loginSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address.' }),
+  password: z.string().min(1, { message: 'Password cannot be empty.'}),
+});
+
+type SignUpFormValue = z.infer<typeof signUpSchema>;
+type LoginFormValue = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const [isRedirecting, setIsRedirecting] = useState(true);
 
-  const form = useForm<UserFormValue>({
-    resolver: zodResolver(formSchema),
+  const signUpForm = useForm<SignUpFormValue>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+    },
+  });
+
+  const loginForm = useForm<LoginFormValue>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -56,27 +75,48 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const onSubmit = async (data: UserFormValue, isSignUp: boolean) => {
+  const handleSignUp = async (data: SignUpFormValue) => {
     setLoading(true);
     try {
-      if (isSignUp) {
-        initiateEmailSignUp(auth, data.email, data.password);
-      } else {
-        initiateEmailSignIn(auth, data.email, data.password);
-      }
-      // Non-blocking, so we don't await here.
-      // The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
+      await initiateEmailSignUp(auth, data.email, data.password, data.name);
+      toast({
+        title: 'Sign Up Successful',
+        description: 'Please log in with your new credentials.',
+      });
+      setActiveTab('login'); // Switch to login tab
+      loginForm.reset({ email: data.email, password: '' });
+      signUpForm.reset();
     } catch (error: any) {
       toast({
+        variant: 'destructive',
+        title: 'Sign Up Failed',
+        description: error.message || 'An unexpected error occurred.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = (data: LoginFormValue) => {
+    setLoading(true);
+    try {
+      initiateEmailSignIn(auth, data.email, data.password);
+      // Non-blocking, so we don't await here.
+      // The onAuthStateChanged listener will handle the redirect on success.
+      // If it fails, the user remains here, and we might need to handle the error
+      // from a global listener or another mechanism if initiateEmailSignIn doesn't throw.
+    } catch (error: any) {
+       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
         description: error.message || 'An unexpected error occurred.',
       });
-      setLoading(false);
+       setLoading(false);
     }
-    // Don't setLoading(false) here because we expect a redirect.
-    // If sign-in fails, the auth state won't change and the user stays here.
-    // A more robust solution might handle specific error codes from Firebase.
+     // A timeout can provide feedback on failure if no redirect happens.
+    setTimeout(() => {
+        setLoading(false);
+    }, 5000);
   };
 
   if (isUserLoading || isRedirecting) {
@@ -99,19 +139,19 @@ export default function LoginPage() {
             Enter your credentials to access your account
           </p>
         </div>
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           <TabsContent value="login">
-            <Form {...form}>
+            <Form {...loginForm}>
               <form
-                onSubmit={form.handleSubmit((data) => onSubmit(data, false))}
+                onSubmit={loginForm.handleSubmit(handleLogin)}
                 className="space-y-4"
               >
                 <FormField
-                  control={form.control}
+                  control={loginForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -128,7 +168,7 @@ export default function LoginPage() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={loginForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
@@ -148,13 +188,29 @@ export default function LoginPage() {
             </Form>
           </TabsContent>
           <TabsContent value="signup">
-            <Form {...form}>
+            <Form {...signUpForm}>
               <form
-                onSubmit={form.handleSubmit((data) => onSubmit(data, true))}
+                onSubmit={signUpForm.handleSubmit(handleSignUp)}
                 className="space-y-4"
               >
                 <FormField
-                  control={form.control}
+                  control={signUpForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="John Doe"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={signUpForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -171,7 +227,24 @@ export default function LoginPage() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={signUpForm.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="(123) 456-7890"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={signUpForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>

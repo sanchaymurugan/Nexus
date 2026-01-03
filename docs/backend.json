@@ -14,11 +14,20 @@
           "type": "string",
           "description": "Email address of the user.",
           "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "The user's phone number."
         }
       },
       "required": [
         "id",
-        "email"
+        "email",
+        "name"
       ]
     },
     "Session": {
