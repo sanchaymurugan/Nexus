@@ -86,8 +86,7 @@ function ProfilePage() {
       }
 
       toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been successfully updated.',
+        title: 'Account updated successfully',
       });
     } catch (error: any) {
       toast({
