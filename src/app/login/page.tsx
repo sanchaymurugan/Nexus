@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -139,11 +140,11 @@ export default function LoginPage() {
   return (
     <div className="container relative flex h-screen flex-col items-center justify-center">
        <Image
-          src="https://picsum.photos/seed/loginpage3/1920/1080"
-          alt="An abstract image representing artificial intelligence and people"
+          src="https://picsum.photos/seed/loginpage4/1920/1080"
+          alt="An abstract image representing the relationship between artificial intelligence and people"
           fill
           className="object-cover"
-          data-ai-hint="artificial intelligence people"
+          data-ai-hint="artificial intelligence relationship"
         />
       <div className="relative z-10 mx-auto flex w-full flex-col justify-center space-y-6 rounded-lg bg-background/80 p-8 shadow-lg backdrop-blur-sm sm:w-[400px]">
         <div className="flex flex-col space-y-2 text-center">
@@ -330,3 +331,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
