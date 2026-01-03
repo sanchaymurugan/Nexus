@@ -56,15 +56,11 @@ service cloud.firestore {
 
     /**
      * Validates User data on update.
-     * Enforces immutability of the 'id' and 'email' fields.
      * Allows name and phoneNumber to be updated.
      */
     function hasValidUserDataForUpdate() {
       let incomingData = request.resource.data;
-      let existingData = resource.data;
-      return incomingData.id == existingData.id &&
-             incomingData.email == existingData.email &&
-             incomingData.name is string &&
+      return incomingData.name is string &&
              incomingData.phoneNumber is string;
     }
     
