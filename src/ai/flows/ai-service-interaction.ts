@@ -16,12 +16,15 @@ const AIServiceInteractionInputSchema = z.object({
   userQuery: z.string().describe('The user query or request.'),
   serviceType: z.string().describe('The type of service the user wants to interact with (e.g., banking, appointment booking).'),
   userDetails: z.string().optional().describe('Optional user details for authentication or context.'),
+  generateHeadline: z.boolean().optional().describe('Whether to generate a headline for the conversation.'),
+  conversationContent: z.string().optional().describe('The full conversation content, required if generateHeadline is true.'),
 });
 export type AIServiceInteractionInput = z.infer<typeof AIServiceInteractionInputSchema>;
 
 const AIServiceInteractionOutputSchema = z.object({
   response: z.string().describe('The AI-generated response after interacting with the external service.'),
   success: z.boolean().describe('Indicates whether the service interaction was successful.'),
+  headline: z.string().optional().describe('A concise and relevant headline for the conversation, if requested.'),
 });
 export type AIServiceInteractionOutput = z.infer<typeof AIServiceInteractionOutputSchema>;
 
@@ -44,6 +47,14 @@ Here are some user details (if available): {{{userDetails}}}
 Based on the user's query, interact with the appropriate service, and respond to the user in a clear and concise manner.
 
 Ensure you confirm success when the user request is fulfilled.
+
+{{#if generateHeadline}}
+You MUST also generate a concise and relevant headline based on the following conversation content. The headline should be no more than a few words.
+Conversation:
+"""
+{{{conversationContent}}}
+"""
+{{/if}}
 `,
 });
 
