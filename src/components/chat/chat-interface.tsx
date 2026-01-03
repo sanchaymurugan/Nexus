@@ -124,7 +124,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-background/20 p-6">
-        <h2 className="text-2xl font-semibold truncate pr-4">{headline}</h2>
+        <h2 className="text-2xl font-semibold truncate pr-4 text-primary-foreground">{headline}</h2>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[200px] flex-shrink-0 text-base py-5">
             <Sparkles className="h-5 w-5 text-muted-foreground" />
