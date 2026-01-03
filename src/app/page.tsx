@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import type { ChatSession } from '@/lib/types'
+import { useState, useCallback, useMemo } from 'react'
+import type { ChatSession, Message } from '@/lib/types'
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -10,59 +10,69 @@ import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import { ChatInterface } from '@/components/chat/chat-interface'
 import { Logo } from './logo'
 import { AuthGuard } from './auth-guard'
-
-const initialSessions: ChatSession[] = [
-  {
-    id: 'session-1',
-    headline: 'Booking a flight to Bali',
-    messages: [
-      { id: 'msg-1', role: 'user', content: 'I need to book a flight for 2 to Bali for next month.' },
-      { id: 'msg-2', role: 'assistant', content: 'Of course! What are your preferred travel dates and airline?' },
-    ],
-  },
-  {
-    id: 'session-2',
-    headline: 'Monthly budget review',
-    messages: [
-      { id: 'msg-3', role: 'user', content: 'Show me my spending for last month.' },
-      { id: 'msg-4', role: 'assistant', content: 'Here is your spending report for last month. You spent the most on dining out.' },
-    ],
-  },
-];
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase'
+import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query } from 'firebase/firestore'
+import { ChatState } from '@/lib/actions'
 
 function AppPage() {
-  const [sessions, setSessions] = useState<ChatSession[]>(initialSessions)
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(
-    initialSessions[0]?.id ?? null
-  )
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const handleNewChat = () => {
-    const newSession: ChatSession = {
-      id: `session-${Date.now()}`,
-      headline: 'New Chat',
-      messages: [],
+  const sessionsQuery = useMemoFirebase(
+    () => user ? query(collection(firestore, `users/${user.uid}/sessions`), orderBy('updatedAt', 'desc')) : null,
+    [firestore, user]
+  );
+  const { data: sessions, isLoading: sessionsLoading } = useCollection<ChatSession>(sessionsQuery);
+
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+
+  const activeSession = useMemo(() => {
+    if (!sessions) return null;
+    if (activeSessionId) {
+      return sessions.find(s => s.id === activeSessionId) ?? null;
     }
-    setSessions((prev) => [newSession, ...prev])
-    setActiveSessionId(newSession.id)
-  }
+    return sessions[0] ?? null;
+  }, [sessions, activeSessionId]);
 
-  const handleSessionUpdate = useCallback((updatedSession: ChatSession) => {
-    setSessions((prev) =>
-      prev.map((s) => (s.id === updatedSession.id ? updatedSession : s))
-    )
-  }, []);
+  const handleNewChat = useCallback(async () => {
+    if (!user) return;
+    const newSessionData = {
+      headline: 'New Chat',
+      updatedAt: serverTimestamp(),
+      userId: user.uid,
+    }
+    const sessionsCollection = collection(firestore, `users/${user.uid}/sessions`);
+    const newDocRef = await addDoc(sessionsCollection, newSessionData);
+    setActiveSessionId(newDocRef.id)
+  }, [user, firestore])
 
-  const handleSessionDelete = useCallback((sessionId: string) => {
-    setSessions((prev) => {
-      const remainingSessions = prev.filter((s) => s.id !== sessionId);
-      if (activeSessionId === sessionId) {
-        setActiveSessionId(remainingSessions[0]?.id ?? null);
-      }
-      return remainingSessions;
-    });
-  }, [activeSessionId]);
+  const handleSessionUpdate = useCallback(async (updatedSessionData: Partial<ChatSession> & { id: string }) => {
+    if (!user) return;
+    const sessionRef = doc(firestore, `users/${user.uid}/sessions`, updatedSessionData.id);
+    await setDoc(sessionRef, { ...updatedSessionData, updatedAt: serverTimestamp() }, { merge: true });
+  }, [user, firestore]);
 
-  const activeSession = sessions.find((s) => s.id === activeSessionId)
+
+  const handleSessionDelete = useCallback(async (sessionId: string) => {
+    if (!user) return;
+    const sessionRef = doc(firestore, `users/${user.uid}/sessions`, sessionId);
+    await deleteDoc(sessionRef);
+    
+    if (activeSessionId === sessionId) {
+      setActiveSessionId(sessions && sessions.length > 1 ? sessions.filter(s => s.id !== sessionId)[0]?.id ?? null : null);
+    }
+  }, [user, firestore, activeSessionId, sessions]);
+
+
+  const chatState: ChatState | null = useMemo(() => {
+    if (!activeSession || !user) return null;
+    return {
+      sessionId: activeSession.id,
+      userId: user.uid,
+      headline: activeSession.headline,
+      messages: [], // messages are now fetched inside the server action
+    }
+  }, [activeSession, user])
 
   return (
     <SidebarProvider>
@@ -78,18 +88,18 @@ function AppPage() {
         </header>
         <div className="flex flex-1 overflow-hidden">
           <ChatSidebar
-            sessions={sessions}
-            activeSessionId={activeSessionId}
+            sessions={sessions ?? []}
+            activeSessionId={activeSession?.id ?? null}
             onSessionSelect={setActiveSessionId}
             onNewChat={handleNewChat}
             onSessionDelete={handleSessionDelete}
             onSessionUpdate={handleSessionUpdate}
+            isLoading={sessionsLoading}
           />
           <main className="flex-1 flex flex-col">
             <ChatInterface
-              key={activeSessionId}
-              session={activeSession ?? null}
-              onSessionUpdate={handleSessionUpdate}
+              key={activeSession?.id}
+              chatState={chatState}
             />
           </main>
         </div>

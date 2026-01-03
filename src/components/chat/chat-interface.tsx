@@ -1,8 +1,8 @@
 'use client'
 
-import { submitMessage } from "@/lib/actions"
-import type { ChatSession } from "@/lib/types"
-import { useEffect, useRef, useActionState } from "react"
+import { submitMessage, type ChatState } from "@/lib/actions"
+import type { Message } from "@/lib/types"
+import { useEffect, useRef, useActionState, useState } from "react"
 import { useFormStatus } from "react-dom"
 import {
   Select,
@@ -17,11 +17,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowUp, Bot, Loader2, Mic, Paperclip, Sparkles } from "lucide-react"
 import { ChatMessage } from "./chat-message"
 import { AnimatePresence, motion } from "framer-motion"
-import { Logo } from "@/app/logo"
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase"
+import { collection, orderBy, query } from "firebase/firestore"
 
 type ChatInterfaceProps = {
-  session: ChatSession | null
-  onSessionUpdate: (session: ChatSession) => void
+  chatState: ChatState | null
 }
 
 function SubmitButton() {
@@ -35,33 +35,34 @@ function SubmitButton() {
 }
 
 export function ChatInterface({
-  session,
-  onSessionUpdate,
+  chatState,
 }: ChatInterfaceProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const [state, formAction] = useActionState(submitMessage, {
-    messages: session?.messages ?? [],
-    headline: session?.headline,
-  })
+  const messagesQuery = useMemoFirebase(() => {
+    if (!user || !chatState?.sessionId) return null;
+    return query(
+      collection(firestore, `users/${user.uid}/sessions/${chatState.sessionId}/messages`),
+      orderBy('createdAt', 'asc')
+    );
+  }, [firestore, user, chatState?.sessionId]);
+
+  const { data: messages, isLoading: messagesLoading } = useCollection<Message>(messagesQuery);
+
+  const [state, formAction] = useActionState(submitMessage, chatState as ChatState)
+  
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
+
 
   useEffect(() => {
-    if (session && (state.messages !== session.messages || (state.headline && state.headline !== session.headline))) {
-      onSessionUpdate({
-        ...session,
-        messages: state.messages,
-        headline: state.headline || session.headline,
-      })
+    if (messages) {
+      setOptimisticMessages(messages);
     }
-  }, [state, session, onSessionUpdate])
-
-  useEffect(() => {
-    if (formRef.current) {
-        formRef.current.reset();
-    }
-  }, [session?.id])
-
+  }, [messages]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -70,9 +71,26 @@ export function ChatInterface({
           scrollableView.scrollTop = scrollableView.scrollHeight;
       }
     }
-  }, [state.messages.length])
+  }, [optimisticMessages.length])
+  
+  const handleFormAction = (formData: FormData) => {
+    const userMessageContent = formData.get('message') as string;
+    if (!userMessageContent?.trim()) return;
 
-  if (!session) {
+    const optimisticMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: userMessageContent,
+      createdAt: new Date()
+    };
+    setOptimisticMessages(prev => [...prev, optimisticMessage]);
+
+    formAction(formData);
+    formRef.current?.reset();
+  }
+
+
+  if (!chatState) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-4 text-center">
         <div className="flex h-full flex-col items-center justify-center gap-6 text-center text-muted-foreground p-4">
@@ -87,7 +105,7 @@ export function ChatInterface({
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b p-6">
-        <h2 className="text-2xl font-semibold truncate pr-4">{session.headline}</h2>
+        <h2 className="text-2xl font-semibold truncate pr-4">{state.headline}</h2>
         <Select defaultValue="pro">
           <SelectTrigger className="w-auto sm:w-[200px] flex-shrink-0 text-base py-5">
             <Sparkles className="h-5 w-5 text-muted-foreground" />
@@ -103,7 +121,12 @@ export function ChatInterface({
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <AnimatePresence>
             <motion.div className="p-6 sm:p-8 space-y-8">
-            {state.messages.map((message, index) => (
+            {(messagesLoading && optimisticMessages.length === 0) && (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {optimisticMessages.map((message, index) => (
                 <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -120,12 +143,7 @@ export function ChatInterface({
       <div className="border-t bg-background/80 p-6 backdrop-blur-sm">
         <form
           ref={formRef}
-          action={(formData) => {
-            if (formRef.current?.message.value.trim()) {
-                formAction(formData);
-                formRef.current.reset();
-            }
-          }}
+          action={handleFormAction}
           className="relative"
         >
           <Textarea

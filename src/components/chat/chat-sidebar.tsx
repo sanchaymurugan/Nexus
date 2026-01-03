@@ -12,6 +12,7 @@ import {
   SidebarInput,
   SidebarTrigger,
   SidebarFooter,
+  SidebarMenuSkeleton,
 } from "@/components/ui/sidebar"
 import type { ChatSession } from "@/lib/types"
 import { Bot, MessageSquareText, Plus, Trash2, Pencil, Check, X, LogOut } from "lucide-react"
@@ -26,8 +27,9 @@ type ChatSidebarProps = {
   activeSessionId: string | null
   onSessionSelect: (id: string) => void
   onNewChat: () => void
-  onSessionDelete: (id: string) => void
-  onSessionUpdate: (session: ChatSession) => void;
+  onSessionDelete: (id: string) => Promise<void>
+  onSessionUpdate: (session: Partial<ChatSession> & { id: string }) => Promise<void>;
+  isLoading: boolean;
 }
 
 export function ChatSidebar({
@@ -37,6 +39,7 @@ export function ChatSidebar({
   onNewChat,
   onSessionDelete,
   onSessionUpdate,
+  isLoading,
 }: ChatSidebarProps) {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingHeadline, setEditingHeadline] = useState('')
@@ -53,7 +56,7 @@ export function ChatSidebar({
     e.stopPropagation();
     const session = sessions.find(s => s.id === sessionId);
     if(session && editingHeadline.trim()){
-      onSessionUpdate({ ...session, headline: editingHeadline.trim() });
+      onSessionUpdate({ id: sessionId, headline: editingHeadline.trim() });
     }
     setEditingSessionId(null);
   }
@@ -85,72 +88,81 @@ export function ChatSidebar({
         <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu className={sessions.length === 0 ? "h-full" : ""}>
-          <AnimatePresence initial={false}>
-            {sessions.map((session) => (
-              <motion.div
-                key={session.id}
-                layout
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
-                transition={{ duration: 0.2, delay: 0.1 }}
-              >
-                <SidebarMenuItem>
-                  {editingSessionId === session.id ? (
-                     <form onSubmit={(e) => handleSaveEdit(e, session.id)} className="flex items-center gap-1 w-full p-1">
-                        <SidebarInput 
-                            autoFocus
-                            value={editingHeadline} 
-                            onChange={(e) => setEditingHeadline(e.target.value)}
-                            className="h-8 text-base"
-                        />
-                        <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                            <Check className="w-5 h-5" />
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => handleCancelEdit(e, session.id)}>
-                            <X className="w-5 h-5" />
-                        </Button>
-                     </form>
-                  ) : (
-                    <>
-                      <SidebarMenuButton
-                        onClick={() => onSessionSelect(session.id)}
-                        isActive={session.id === activeSessionId}
-                        className="w-full justify-start gap-3 pr-[56px]"
-                        tooltip={session.headline}
-                      >
-                        <MessageSquareText className="shrink-0" />
-                        <span className="truncate">{session.headline}</span>
-                      </SidebarMenuButton>
-                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
-                         <SidebarMenuAction
-                            onClick={(e) => handleEditClick(e, session)}
-                            showOnHover
-                            aria-label="Edit headline"
-                            className="relative"
-                         >
-                            <Pencil className="w-5 h-5" />
-                        </SidebarMenuAction>
-                        <SidebarMenuAction
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onSessionDelete(session.id)
-                          }}
-                          showOnHover
-                          aria-label="Delete chat"
-                          className="relative"
+        <SidebarMenu className={sessions.length === 0 && !isLoading ? "h-full" : ""}>
+          {isLoading ? (
+             <div className="p-2 space-y-2">
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+                <SidebarMenuSkeleton showIcon />
+             </div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {sessions.map((session) => (
+                <motion.div
+                  key={session.id}
+                  layout
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+                  transition={{ duration: 0.2, delay: 0.1 }}
+                >
+                  <SidebarMenuItem>
+                    {editingSessionId === session.id ? (
+                       <form onSubmit={(e) => handleSaveEdit(e, session.id)} className="flex items-center gap-1 w-full p-1">
+                          <SidebarInput 
+                              autoFocus
+                              value={editingHeadline} 
+                              onChange={(e) => setEditingHeadline(e.target.value)}
+                              className="h-8 text-base"
+                          />
+                          <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                              <Check className="w-5 h-5" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => handleCancelEdit(e, session.id)}>
+                              <X className="w-5 h-5" />
+                          </Button>
+                       </form>
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          onClick={() => onSessionSelect(session.id)}
+                          isActive={session.id === activeSessionId}
+                          className="w-full justify-start gap-3 pr-[56px]"
+                          tooltip={session.headline}
                         >
-                          <Trash2 className="w-5 h-5" />
-                        </SidebarMenuAction>
-                      </div>
-                    </>
-                  )}
-                </SidebarMenuItem>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {sessions.length === 0 && (
+                          <MessageSquareText className="shrink-0" />
+                          <span className="truncate">{session.headline}</span>
+                        </SidebarMenuButton>
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+                           <SidebarMenuAction
+                              onClick={(e) => handleEditClick(e, session)}
+                              showOnHover
+                              aria-label="Edit headline"
+                              className="relative"
+                           >
+                              <Pencil className="w-5 h-5" />
+                          </SidebarMenuAction>
+                          <SidebarMenuAction
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onSessionDelete(session.id)
+                            }}
+                            showOnHover
+                            aria-label="Delete chat"
+                            className="relative"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </SidebarMenuAction>
+                        </div>
+                      </>
+                    )}
+                  </SidebarMenuItem>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
+
+          {sessions.length === 0 && !isLoading && (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-muted-foreground p-8">
               <Bot className="h-16 w-16" />
               <p className="text-base">

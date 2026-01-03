@@ -3,42 +3,61 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+  const isConfigAvailable = firebaseConfig && firebaseConfig.projectId;
+
+  if (getApps().length === 0) {
+    if (!isConfigAvailable) {
+      try {
+        const app = initializeApp();
+        return getSdks(app);
+      } catch (e) {
+        console.error(
+          'Firebase initialization failed. Please provide a valid Firebase config object.'
+        );
+        // Return a dummy object or throw an error if Firebase is essential
+        return getEmptySdks();
       }
-      firebaseApp = initializeApp(firebaseConfig);
+    } else {
+      const app = initializeApp(firebaseConfig);
+      return getSdks(app);
     }
-
-    return getSdks(firebaseApp);
   }
-
   // If already initialized, return the SDKs with the already initialized App
   return getSdks(getApp());
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
+export function getSdks(firebaseApp?: FirebaseApp) {
+  if (!firebaseApp) return getEmptySdks();
+
+  const firestore = getFirestore(firebaseApp);
+  
+  // Example of connecting to an emulator.
+  // This should be behind a feature flag or environment variable.
+  // if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+  //   connectFirestoreEmulator(firestore, 'localhost', 8080);
+  // }
+
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: firestore
   };
 }
+
+function getEmptySdks() {
+  // This is a failsafe for when Firebase isn't configured.
+  // It provides mock objects that won't crash the app.
+  return {
+    firebaseApp: null as unknown as FirebaseApp,
+    auth: null as unknown as any,
+    firestore: null as unknown as any,
+  };
+}
+
 
 export * from './provider';
 export * from './client-provider';

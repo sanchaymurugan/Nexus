@@ -8,9 +8,10 @@
  * Data Structure:
  * The data is organized hierarchically under the `/users/{userId}` path. Each
  * user has a root document containing their profile, and all other user-specific
- * data (like login sessions) is stored in subcollections under that document.
+ * data is stored in subcollections under that document.
  *   - /users/{userId} -> User Profile
- *   - /users/{userId}/sessions/{sessionId} -> User's Login Sessions
+ *   - /users/{userId}/sessions/{sessionId} -> User's Chat Sessions
+ *   - /users/{userId}/sessions/{sessionId}/messages/{messageId} -> Messages in a chat
  *
  * Key Security Decisions:
  * - User Enumeration is Disallowed: Listing the top-level `/users` collection is
@@ -18,21 +19,6 @@
  * - Strict Path-Based Ownership: Authorization is determined primarily by the
  *   `{userId}` wildcard in the document path, ensuring a user is always
  *   operating within their own data tree.
- * - Relational Integrity: On document creation, rules validate that internal ID
- *   fields (e.g., `User.id`, `Session.userId`) match the `userId` from the
- *   path, creating a secure and unbreakable link between the data and its owner.
- *
- * Denormalization for Authorization:
- * The `Session` documents contain a `userId` field. While ownership is primarily
- * enforced by the path (`/users/{userId}/...`), this denormalized field is used
- * during creation and updates to validate and enforce relational integrity,
- * ensuring a session can never be created under the wrong user or moved between users.
- *
- * Structural Segregation:
- * The data model naturally separates user-specific data into a private tree for each
- * user. The `/users/{userId}` path acts as a secure container, and all subcollections
- * within it inherit the same ownership-based security context. This makes the rules
- * simple, performant, and easy to reason about.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -58,17 +44,7 @@ service cloud.firestore {
     }
 
     /**
-     * A robust check for updates and deletes that ensures the user owns the
-     * document and that the document actually exists.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
      * Validates the incoming User data on creation.
-     * Prototyping Mode: Only validates fields critical for authorization,
-     * ensuring the document's internal ID matches the authenticated user's ID.
      */
     function hasValidUserDataForCreate(userId) {
       let incomingData = request.resource.data;
@@ -79,8 +55,7 @@ service cloud.firestore {
 
     /**
      * Validates User data on update.
-     * Enforces immutability of the 'id' and 'email' fields to prevent re-assigning the
-     * document to a different user.
+     * Enforces immutability of the 'id' and 'email' fields.
      */
     function hasValidUserDataForUpdate() {
       let incomingData = request.resource.data;
@@ -88,64 +63,56 @@ service cloud.firestore {
       return incomingData.id == existingData.id &&
              incomingData.email == existingData.email;
     }
-
+    
     /**
-     * Validates the incoming Session data on creation.
-     * Prototyping Mode: Ensures the session's internal 'userId' field correctly
-     * points back to the user specified in the document path.
+     * Validates incoming ChatSession data.
      */
-    function hasValidSessionDataForCreate(userId) {
-      return request.resource.data.userId == userId;
+    function hasValidSessionData(userId) {
+        let data = request.resource.data;
+        return data.userId == userId &&
+               data.headline is string &&
+               data.updatedAt == request.time;
     }
 
     /**
-     * Validates Session data on update.
-     * Enforces immutability of the 'userId' field to prevent moving a session
-     * record between users.
+     * Validates incoming Message data.
      */
-    function hasValidSessionDataForUpdate() {
-      return request.resource.data.userId == resource.data.userId;
-    }
+     function hasValidMessageData() {
+        let data = request.resource.data;
+        return (data.role == 'user' || data.role == 'assistant') &&
+               data.content is string &&
+               data.createdAt == request.time;
+     }
 
     //-------------------------------------------------------------------------
     // Collection Rules
     //-------------------------------------------------------------------------
 
-    /**
-     * @description Manages user profile documents. Only the user themselves can
-     * create, read, update, or delete their own profile.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user creating their own user document for the first time. `auth.uid` must match `{userId}`.
-     * @deny (get) An authenticated user trying to read another user's profile document.
-     * @principle Restricts access to a user's own data tree and prevents user enumeration.
-     */
     match /users/{userId} {
-      // READ: Only the owner can get their own document. Listing is disabled to prevent user enumeration.
       allow get: if isOwner(userId);
-      allow list: if false;
-
-      // WRITE: The owner can create their own document, and update/delete it once it exists.
+      allow list: if false; // Prevent user enumeration
       allow create: if isOwner(userId) && hasValidUserDataForCreate(userId);
-      allow update: if isExistingOwner(userId) && hasValidUserDataForUpdate();
-      allow delete: if isExistingOwner(userId);
-    }
+      allow update: if isOwner(userId) && hasValidUserDataForUpdate();
+      allow delete: if isOwner(userId);
 
-    /**
-     * @description Manages a user's login session records. Access is restricted to the owner of the sessions.
-     * @path /users/{userId}/sessions/{sessionId}
-     * @allow (list) An authenticated user listing all of their own past and current login sessions.
-     * @deny (create) An authenticated user trying to create a session record under another user's account.
-     * @principle Enforces document ownership for a user-specific subcollection.
-     */
-    match /users/{userId}/sessions/{sessionId} {
-      // READ: The owner can get or list their own session documents.
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-
-      // WRITE: The owner can create, update, and delete their own session documents.
-      allow create: if isOwner(userId) && hasValidSessionDataForCreate(userId);
-      allow update: if isExistingOwner(userId) && hasValidSessionDataForUpdate();
-      allow delete: if isExistingOwner(userId);
+      /**
+       * @description Manages a user's chat session records. Access is restricted to the owner.
+       */
+      match /sessions/{sessionId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidSessionData(userId);
+        allow update: if isOwner(userId); // More granular checks can be added here
+        
+        /**
+         * @description Manages messages within a chat session. Access is restricted to the owner.
+         */
+        match /messages/{messageId} {
+            allow read, list: if isOwner(userId);
+            allow create: if isOwner(userId) && hasValidMessageData();
+            // Disallow updates and deletes for message history integrity
+            allow update, delete: if false;
+        }
+      }
     }
   }
 }

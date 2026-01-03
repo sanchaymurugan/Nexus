@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the Nexus AI Proxy application.",
+      "description": "Represents a user of the Nexus application.",
       "properties": {
         "id": {
           "type": "string",
@@ -30,36 +30,58 @@
         "name"
       ]
     },
-    "Session": {
+    "ChatSession": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Session",
+      "title": "ChatSession",
       "type": "object",
-      "description": "Represents a user session within the Nexus AI Proxy application.",
+      "description": "Represents a single chat session for a user.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the session entity."
+          "description": "Unique identifier for the chat session."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Session)"
+          "description": "The ID of the user who owns this session."
         },
-        "loginTime": {
+        "headline": {
           "type": "string",
-          "description": "The date and time the user logged in.",
-          "format": "date-time"
+          "description": "A short, AI-generated headline for the conversation."
         },
-        "logoutTime": {
+        "updatedAt": {
           "type": "string",
-          "description": "The date and time the user logged out. Null if the session is still active.",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "The timestamp of the last message in the session."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "loginTime"
-      ]
+      "required": ["id", "userId", "updatedAt"]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a chat session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the message."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"],
+          "description": "The role of the sender (user or AI assistant)."
+        },
+        "content": {
+          "type": "string",
+          "description": "The text content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the message was created."
+        }
+      },
+      "required": ["id", "role", "content", "createdAt"]
     }
   },
   "auth": {
@@ -77,36 +99,29 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles. The 'userId' is derived from Firebase Authentication. This enforces path-based ownership for user data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user, obtained from Firebase Authentication."
-            }
-          ]
+          "description": "Stores user profiles. The 'userId' is derived from Firebase Authentication."
         }
       },
       {
         "path": "/users/{userId}/sessions/{sessionId}",
         "definition": {
-          "entityName": "Session",
+          "entityName": "ChatSession",
           "schema": {
-            "$ref": "#/backend/entities/Session"
+            "$ref": "#/backend/entities/ChatSession"
           },
-          "description": "Stores session data for each user. Enforces path-based ownership. Includes `userId` to ensure each session belongs to the correct user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user, obtained from Firebase Authentication."
-            },
-            {
-              "name": "sessionId",
-              "description": "The unique identifier for the session."
-            }
-          ]
+          "description": "Stores the metadata for a user's chat sessions."
+        }
+      },
+      {
+        "path": "/users/{userId}/sessions/{sessionId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": {
+            "$ref": "#/backend/entities/Message"
+          },
+          "description": "Stores the individual messages for a specific chat session."
         }
       }
-    ],
-    "reasoning": "This Firestore data structure is designed to support a secure and scalable login system for the Nexus AI Proxy application. It leverages path-based ownership for user data and sessions, ensuring authorization independence and facilitating straightforward security rules. The structure prioritizes clarity and debuggability, aligning with the core design principles.\n\nThe `/users/{userId}` collection stores user profiles, with `userId` derived from Firebase Authentication. The `/users/{userId}/sessions/{sessionId}` subcollection stores session data for each user, leveraging path-based ownership to directly associate sessions with their respective users. This eliminates the need for `get()` calls to determine user ownership, improving security and performance.\n\nThe structure adheres to structural segregation, as all documents within a collection share the same security requirements. This makes it easier to implement and maintain robust security rules.  QAPs (Rules are not Filters) are supported because list operations can be securely performed based on the path-based ownership."
+    ]
   }
 }
