@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
-import type { ChatSession, Message } from '@/lib/types'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import type { ChatSession } from '@/lib/types'
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -12,7 +12,7 @@ import { Logo } from './logo'
 import { AuthGuard } from './auth-guard'
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase'
 import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc, orderBy, query } from 'firebase/firestore'
-import { ChatState } from '@/lib/actions'
+import { type ChatState } from '@/lib/actions'
 
 function AppPage() {
   const { user } = useUser();
@@ -28,11 +28,27 @@ function AppPage() {
 
   const activeSession = useMemo(() => {
     if (!sessions) return null;
+    // If we have an activeSessionId, try to find it
     if (activeSessionId) {
-      return sessions.find(s => s.id === activeSessionId) ?? null;
+      const found = sessions.find(s => s.id === activeSessionId);
+      if (found) return found;
     }
-    return sessions[0] ?? null;
+    // If no active session or the active one is not found (e.g., deleted), default to the first one
+    if (sessions.length > 0) {
+      return sessions[0];
+    }
+    return null;
   }, [sessions, activeSessionId]);
+
+  // Effect to set the active session ID when sessions load or change
+  useEffect(() => {
+    if (activeSession) {
+      setActiveSessionId(activeSession.id);
+    } else {
+      setActiveSessionId(null);
+    }
+  }, [activeSession]);
+
 
   const handleNewChat = useCallback(async () => {
     if (!user) return;
@@ -58,8 +74,12 @@ function AppPage() {
     const sessionRef = doc(firestore, `users/${user.uid}/sessions`, sessionId);
     await deleteDoc(sessionRef);
     
+    // If the deleted session was the active one, select a new one.
     if (activeSessionId === sessionId) {
-      setActiveSessionId(sessions && sessions.length > 1 ? sessions.filter(s => s.id !== sessionId)[0]?.id ?? null : null);
+      // Find the new list of sessions without the deleted one
+      const remainingSessions = sessions?.filter(s => s.id !== sessionId) ?? [];
+      // Set the new active session to the first of the remaining, or null if none exist
+      setActiveSessionId(remainingSessions[0]?.id ?? null);
     }
   }, [user, firestore, activeSessionId, sessions]);
 
@@ -77,13 +97,13 @@ function AppPage() {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full flex-col">
-        <header className="flex h-20 items-center justify-center border-b px-4 text-center shrink-0">
+        <header className="flex h-20 shrink-0 items-center justify-center border-b px-4 text-center">
              <div className="absolute left-4">
                 <SidebarTrigger className="md:hidden" />
              </div>
              <div className="flex flex-col items-center">
                 <Logo />
-                <p className="text-sm text-muted-foreground mt-1">Your unified AI assistant</p>
+                <p className="mt-1 text-sm text-muted-foreground">Your unified AI assistant</p>
              </div>
         </header>
         <div className="flex flex-1 overflow-hidden">
@@ -96,7 +116,7 @@ function AppPage() {
             onSessionUpdate={handleSessionUpdate}
             isLoading={sessionsLoading}
           />
-          <main className="flex-1 flex flex-col">
+          <main className="flex flex-1 flex-col">
             <ChatInterface
               key={activeSession?.id}
               chatState={chatState}
