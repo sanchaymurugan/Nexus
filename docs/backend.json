@@ -52,6 +52,10 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of the last message in the session."
+        },
+        "isSample": {
+          "type": "boolean",
+          "description": "Indicates if the chat session is a pre-populated sample."
         }
       },
       "required": ["id", "userId", "updatedAt"]

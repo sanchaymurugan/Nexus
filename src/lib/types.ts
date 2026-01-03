@@ -9,9 +9,10 @@ export type Message = {
 };
 
 export type ChatSession = {
-  id: string;
+  id:string;
   headline: string;
   messages: Message[];
   updatedAt?: Timestamp | AdminTimestamp | Date;
   userId: string;
+  isSample?: boolean;
 };

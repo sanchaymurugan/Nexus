@@ -11,6 +11,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { getSdks } from '.';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError } from './errors';
+import { seedSampleData } from './seed-data';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -39,6 +40,10 @@ export async function initiateEmailSignUp(authInstance: Auth, email: string, pas
     };
     // Use non-blocking set with catch for error handling
     setDoc(userRef, userData, { merge: true })
+        .then(() => {
+            // After successfully creating the user document, seed the sample data
+            seedSampleData(firestore, user.uid);
+        })
         .catch(error => {
             errorEmitter.emit(
                 'permission-error',

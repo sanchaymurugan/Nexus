@@ -71,7 +71,8 @@ service cloud.firestore {
         let data = request.resource.data;
         return data.userId == userId &&
                data.headline is string &&
-               data.updatedAt == request.time;
+               data.updatedAt == request.time &&
+               (!('isSample' in data) || data.isSample is bool);
     }
 
     /**
