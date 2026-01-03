@@ -10,7 +10,7 @@ const sampleConversations = [
       { role: "user", content: "I'll be flying from SFO. I prefer to fly with Delta and would like to leave in the morning on Friday and return Sunday evening." },
       { role: "assistant", content: "Great. I found a Delta flight departing SFO at 8:30 AM next Friday and returning from JFK at 7:00 PM on Sunday. The total price is $350. Would you like me to book it?" },
       { role: "user", content: "Yes, that sounds perfect. Please book it for me." },
-      { role: "assistant", content: "Your flight to NYC has been booked successfully! You'll receive a confirmation email shortly. Is there anything else I can help you with?" },
+      { role: "assistant", content: "Your flight to NYC has been booked successfully! Your confirmation number is DLF456. You'll receive a confirmation email shortly with all the details. Is there anything else I can help you with?" },
       { role: "user", content: "No, that's all. Thank you, Nexus!" },
     ],
   },
@@ -23,7 +23,7 @@ const sampleConversations = [
       { role: "assistant", content: "Your spending is up by about 10% compared to the previous month, mainly due to an increase in the 'Dining Out' category." },
       { role: "user", content: "Okay, I need to watch that. Can you set a budget reminder if my 'Dining Out' spending goes over $150 this month?" },
       { role: "assistant", content: "Budget reminder set. I'll notify you if your 'Dining Out' expenses exceed $150 this month. Anything else?" },
-       { role: "user", content: "That's it, thank you Nexus!" },
+      { role: "user", content: "That's it, thank you Nexus!" },
     ],
   },
   {
